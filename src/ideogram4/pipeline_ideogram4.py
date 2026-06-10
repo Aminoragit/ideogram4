@@ -510,6 +510,24 @@ class Ideogram4Pipeline:
       raise ValueError(combined)
     warnings.warn(combined, stacklevel=2)
 
+  def _wrap_plain_text_if_needed(self, prompt: str) -> str:
+    prompt_str = prompt.strip()
+    if prompt_str.startswith("{") and prompt_str.endswith("}"):
+      try:
+        json.loads(prompt_str)
+        return prompt_str
+      except Exception:
+        pass
+    
+    wrapped = {
+      "high_level_description": prompt_str,
+      "compositional_deconstruction": {
+        "background": prompt_str,
+        "elements": [],
+      },
+    }
+    return json.dumps(wrapped, separators=(",", ":"), ensure_ascii=False)
+
   @torch.no_grad()
   def __call__(
     self,
@@ -529,6 +547,8 @@ class Ideogram4Pipeline:
     """Generate images for the given prompts."""
     if isinstance(prompts, str):
       prompts = [prompts]
+
+    prompts = [self._wrap_plain_text_if_needed(p) for p in prompts]
 
     self._verify_prompts(prompts, raise_on_issues=raise_on_caption_issues)
 
