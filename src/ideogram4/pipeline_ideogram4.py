@@ -6,9 +6,19 @@ from dataclasses import dataclass
 from posixpath import dirname as _posix_dirname, join as _posix_join
 from typing import Optional, Sequence
 
+import os
 import torch
-from huggingface_hub import hf_hub_download
+from huggingface_hub import hf_hub_download as _original_hf_hub_download
 from huggingface_hub.errors import EntryNotFoundError
+
+def hf_hub_download(repo_id: str, filename: str, **kwargs):
+  if os.path.isdir(repo_id):
+    normalized_filename = filename.replace('/', os.sep)
+    local_path = os.path.join(repo_id, normalized_filename)
+    if os.path.exists(local_path):
+      return local_path
+    raise EntryNotFoundError(f"Local file not found: {local_path} (from repo_id: {repo_id})")
+  return _original_hf_hub_download(repo_id=repo_id, filename=filename, **kwargs)
 from PIL import Image
 from safetensors.torch import load_file
 from transformers import AutoConfig, AutoModel, AutoTokenizer

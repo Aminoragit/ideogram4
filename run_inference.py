@@ -20,8 +20,8 @@ from ideogram4 import (
 )
 
 QUANTIZATION_REPOS = {
-  "nf4": "ideogram-ai/ideogram-4-nf4",
-  "fp8": "ideogram-ai/ideogram-4-fp8",
+  "nf4": os.environ.get("WEIGHTS_REPO") or "ideogram-ai/ideogram-4-nf4",
+  "fp8": os.environ.get("WEIGHTS_REPO") or "ideogram-ai/ideogram-4-fp8",
 }
 
 
@@ -157,15 +157,15 @@ def main() -> None:
     )
 
   prompt = args.prompt
+  if args.magic_prompt and not args.magic_prompt_key:
+    print(
+      "WARNING: magic prompt is enabled but no API key was found. "
+      "Disabling magic prompt expansion and using the raw prompt verbatim.",
+      file=sys.stderr,
+    )
+    args.magic_prompt = False
+
   if args.magic_prompt:
-    if not args.magic_prompt_key:
-      print(
-        "ERROR: magic prompt is enabled but no API key was found. Set "
-        "MAGIC_PROMPT_API_KEY, pass --magic-prompt-key, or disable expansion "
-        "with --no-magic-prompt.",
-        file=sys.stderr,
-      )
-      sys.exit(2)
     aspect_ratio = aspect_ratio_from_size(args.width, args.height)
     magic = MAGIC_PROMPTS[args.magic_prompt_model](api_key=args.magic_prompt_key)  # type: ignore[call-arg]
     print(

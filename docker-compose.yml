@@ -1,0 +1,24 @@
+services:
+  ideogram-webui:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ideogram-webui
+    environment:
+      - CUDA_VISIBLE_DEVICES=0
+      - WEIGHTS_REPO=/models/ideogram4
+    volumes:
+      # 호스트의 로컬 모델 저장 경로를 컨테이너에 매핑하여 로컬에서 바로 가중치를 로드합니다.
+      - /home/user/models/ideogram4:/models/ideogram4
+      # 로컬 소스 코드를 마운트하여 수정 사항을 컨테이너 내부에 즉시 반영합니다.
+      - .:/app
+    ports:
+      - "7860:7860"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['0']
+              capabilities: [gpu]
+    restart: unless-stopped
